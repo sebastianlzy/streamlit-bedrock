@@ -24,7 +24,7 @@
 - [x] titanText
 - [x] mistral
 - [x] claude sonnet
-- [ ] claude haiku
+- [x] claude haiku
 
 # Getting started
 

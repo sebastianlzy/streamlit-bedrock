@@ -8,9 +8,9 @@ from prompts import *
 import pandas as pd
 import streamlit as st
 
-from model_runtimes import invoke_jurrasic_runtime, invoke_claude_2_runtime, invoke_cohere_runtime, \
+from model_runtimes import invoke_jurrasic_ultra_runtime, invoke_claude_2_runtime, invoke_cohere_command_runtime, \
     invoke_llama_13b_runtime, invoke_llama_70b_runtime, invoke_titan_text_g1_runtime, invoke_mixtral_8x7b_runtime, \
-    invoke_claude_3_sonnet_runtime
+    invoke_claude_3_sonnet_runtime, invoke_claude_3_haiku_runtime
 
 bedrock = boto3.client('bedrock')
 bedrock_runtime = boto3.client(service_name='bedrock-runtime')
@@ -20,11 +20,11 @@ top_k = 500
 
 fm_models = [
     {
-        "model_name": "jurassic",
+        "model_name": "jurassic_ultra",
         "model_id": "ai21.j2-ultra",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'completions.0.data.text'),
-        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_jurrasic_runtime(_input_prompt, _model_id)
+        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_jurrasic_ultra_runtime(_input_prompt, _model_id)
     },
     {
         "model_name": "claude_2",
@@ -34,11 +34,11 @@ fm_models = [
         "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_claude_2_runtime(_input_prompt, _model_id)
     },
     {
-        "model_name": "cohere",
+        "model_name": "cohere_command",
         "model_id": "cohere.command-text-v14",
         "isEnabled": True,
         "output_formatter": lambda _response: " ".join(map_(get(_response, 'generations'), "text")),
-        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_cohere_runtime(_input_prompt, _model_id)
+        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_cohere_command_runtime(_input_prompt, _model_id)
     },
     {
         "model_name": "llama_13b",
@@ -74,6 +74,16 @@ fm_models = [
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'content.0.text'),
         "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_claude_3_sonnet_runtime(
+            _input_prompt,
+            _model_id
+        )
+    },
+    {
+        "model_name": "claude_3_haiku",
+        "model_id": "anthropic.claude-3-haiku-20240307-v1:0",
+        "isEnabled": True,
+        "output_formatter": lambda _response: get(_response, 'content.0.text'),
+        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_claude_3_haiku_runtime(
             _input_prompt,
             _model_id
         )
@@ -145,7 +155,7 @@ if __name__ == "__main__":
     selected_fm_model_names = st.multiselect(
         'Select models',
         fm_model_names,
-        ["jurassic", "cohere", "claude_3_sonnet"]
+        ["jurassic_ultra", "cohere_command", "claude_3_sonnet"]
     )
     print(selected_fm_model_names)
 

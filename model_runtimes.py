@@ -21,7 +21,7 @@ def invoke_runtime_model(model_id, runtime_input, accept='application/json'):
         return {}
 
 
-def invoke_jurrasic_runtime(prompt, model_id):
+def invoke_jurrasic_ultra_runtime(prompt, model_id):
     input_for_model_runtime = {
         'prompt': prompt,
         'maxTokens': 1024,
@@ -48,7 +48,7 @@ def invoke_titan_text_g1_runtime(prompt, model_id):
     return invoke_runtime_model(model_id, input_for_model_runtime)
 
 
-def invoke_cohere_runtime(prompt, model_id):
+def invoke_cohere_command_runtime(prompt, model_id):
     input_for_model_runtime = {
         'prompt': prompt,
         'max_tokens': 1024,
@@ -103,6 +103,20 @@ def invoke_mixtral_8x7b_runtime(prompt, model_id):
 
 
 def invoke_claude_3_sonnet_runtime(prompt, model_id):
+    input_for_model_runtime = {
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": 1024,
+        "messages": [
+            {
+                "role": "user",
+                "content": [{"type": "text", "text": prompt}],
+            }
+        ],
+    }
+    return invoke_runtime_model(model_id, input_for_model_runtime, accept="*/*")
+
+
+def invoke_claude_3_haiku_runtime(prompt, model_id):
     input_for_model_runtime = {
         "anthropic_version": "bedrock-2023-05-31",
         "max_tokens": 1024,
