@@ -1,0 +1,9 @@
+version: '3'
+
+tasks:
+  activate-pyenv:
+    cmds:
+      - pyenv activate streamlit-bedrock
+  run-streamlit:
+    cmds:
+      - streamlit run your_script.py run-foundational-models.py  
