@@ -2,6 +2,9 @@
 
 1. To explore the results from different model
 
+# Demo
+![demo](./screenshots/streamlit-bedrock.gif "demo")
+
 # Features
 
 1. Multi-processing
