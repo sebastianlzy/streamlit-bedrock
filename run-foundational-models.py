@@ -9,7 +9,7 @@ import pandas as pd
 import streamlit as st
 
 from model_runtimes import invoke_jurrasic_runtime, invoke_claude_2_runtime, invoke_cohere_runtime, \
-    invoke_llama_13b_runtime, invoke_llama_70b_runtime
+    invoke_llama_13b_runtime, invoke_llama_70b_runtime, invoke_titan_text_g1_runtime
 
 bedrock = boto3.client('bedrock')
 bedrock_runtime = boto3.client(service_name='bedrock-runtime')
@@ -53,6 +53,13 @@ fm_models = [
         "output_formatter": lambda _response: get(_response, 'generation'),
         "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_llama_70b_runtime(_input_prompt, _model_id)
     },
+    {
+        "model_name": "titan_text_lite",
+        "model_id": "amazon.titan-text-lite-v1",
+        "isEnabled": True,
+        "output_formatter": lambda _response: get(_response, 'results.0.outputText'),
+        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_titan_text_g1_runtime(_input_prompt, _model_id)
+    },
 ]
 
 
@@ -62,7 +69,7 @@ def list_foundational_models():
     table = []
 
     for model in models:
-        table.append([model.get('model_name'), model.get('model_id'), model.get('responseStreamingSupported')])
+        table.append([model.get('modelName'), model.get('modelId'), model.get('responseStreamingSupported')])
     return pd.DataFrame(table, columns=['ModelName', 'modelId', 'isStreamingSupported'])
 
 
@@ -79,6 +86,7 @@ def execute_thread(input_prompt, fm_model, model_outputs):
     response, response_in_seconds = measure_time_taken(
         lambda: fm_model["invoke_model_runtime"](input_prompt, fm_model["model_id"])
     )
+    
     model_output = {
         "model_name": model_name,
         "runtime_response": response,

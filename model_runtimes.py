@@ -31,7 +31,7 @@ def invoke_jurrasic_runtime(prompt, model_id):
     return invoke_runtime_model(model_id, input_for_model_runtime)
 
 
-def invoke_amazon_titan_runtime(prompt, model_id):
+def invoke_titan_text_g1_runtime(prompt, model_id):
     input_for_model_runtime = {
         'inputText': prompt,
         'textGenerationConfig': {
