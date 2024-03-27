@@ -1,3 +1,5 @@
+import base64
+
 import multiprocess as mp
 
 import boto3
@@ -24,59 +26,56 @@ fm_models = [
         "model_id": "ai21.j2-ultra",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'completions.0.data.text'),
-        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_jurrasic_ultra_runtime(_input_prompt, _model_id)
+        "invoke_model_runtime": lambda input, _model_id: invoke_jurrasic_ultra_runtime(input, _model_id)
     },
     {
         "model_name": "claude_2",
         "model_id": "anthropic.claude-v2:1",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'completion'),
-        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_claude_2_runtime(_input_prompt, _model_id)
+        "invoke_model_runtime": lambda input, _model_id: invoke_claude_2_runtime(input, _model_id)
     },
     {
         "model_name": "cohere_command",
         "model_id": "cohere.command-text-v14",
         "isEnabled": True,
         "output_formatter": lambda _response: " ".join(map_(get(_response, 'generations'), "text")),
-        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_cohere_command_runtime(_input_prompt, _model_id)
+        "invoke_model_runtime": lambda input, _model_id: invoke_cohere_command_runtime(input, _model_id)
     },
     {
         "model_name": "llama_13b",
         "model_id": "meta.llama2-13b-chat-v1",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'generation'),
-        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_llama_13b_runtime(_input_prompt, _model_id)
+        "invoke_model_runtime": lambda input, _model_id: invoke_llama_13b_runtime(input, _model_id)
     },
     {
         "model_name": "llama_70b",
         "model_id": "meta.llama2-70b-chat-v1",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'generation'),
-        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_llama_70b_runtime(_input_prompt, _model_id)
+        "invoke_model_runtime": lambda input, _model_id: invoke_llama_70b_runtime(input, _model_id)
     },
     {
         "model_name": "titan_text_lite",
         "model_id": "amazon.titan-text-lite-v1",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'results.0.outputText'),
-        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_titan_text_g1_runtime(_input_prompt, _model_id)
+        "invoke_model_runtime": lambda input, _model_id: invoke_titan_text_g1_runtime(input, _model_id)
     },
     {
         "model_name": "mixtral_8x7b",
         "model_id": "mistral.mixtral-8x7b-instruct-v0:1",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'outputs.0.text'),
-        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_mixtral_8x7b_runtime(_input_prompt, _model_id)
+        "invoke_model_runtime": lambda input, _model_id: invoke_mixtral_8x7b_runtime(input, _model_id)
     },
     {
         "model_name": "claude_3_sonnet",
         "model_id": "anthropic.claude-3-sonnet-20240229-v1:0",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'content.0.text'),
-        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_claude_3_sonnet_runtime(
-            _input_prompt,
-            _model_id
-        )
+        "invoke_model_runtime": lambda input, _model_id: invoke_claude_3_sonnet_runtime(input, _model_id)
     },
     {
         "model_name": "claude_3_haiku",
@@ -108,11 +107,13 @@ def measure_time_taken(cb):
     return response, time_in_seconds
 
 
-def execute_thread(input_prompt, fm_model, model_outputs):
+def execute_thread(input_prompt, input_image, fm_model, model_outputs):
     model_name = fm_model["model_name"]
     print(f"executing {model_name} model")
     response, response_in_seconds = measure_time_taken(
-        lambda: fm_model["invoke_model_runtime"](input_prompt, fm_model["model_id"])
+        lambda: fm_model["invoke_model_runtime"](
+            {"prompt": input_prompt, "image": input_image},
+            fm_model["model_id"])
     )
 
     model_output = {
@@ -126,13 +127,13 @@ def execute_thread(input_prompt, fm_model, model_outputs):
     return model_output
 
 
-def main(input_prompt, fm_models):
+def main(input_prompt, input_image, fm_models):
     jobs = []
     manager = mp.Manager()
     model_outputs = manager.list()
 
     for fm_model in fm_models:
-        process = mp.Process(target=execute_thread, args=(input_prompt, fm_model, model_outputs))
+        process = mp.Process(target=execute_thread, args=(input_prompt, input_image, fm_model, model_outputs))
         process.start()
         jobs.append(process)
 
@@ -149,13 +150,22 @@ def is_selected(arr, predicate):
 if __name__ == "__main__":
     st.title("Prompt")
     prompt = st.text_area("Prompt", custom_prompt, label_visibility="hidden")
+    uploaded_file = st.file_uploader("Choose a file (only works with Claude Sonnet)")
+    encoded_image = None
+
+    if uploaded_file is not None:
+        # To read file as bytes:
+        bytes_data = uploaded_file.getvalue()
+        encoded_image = base64.b64encode(bytes_data).decode('utf-8')
+
     st.divider()
 
     fm_model_names = pydash.map_(fm_models, "model_name")
     selected_fm_model_names = st.multiselect(
         'Select models',
         fm_model_names,
-        ["jurassic_ultra", "cohere_command", "claude_3_sonnet"]
+        # ["jurassic_ultra", "cohere_command", "claude_3_sonnet"]
+        ["claude_3_sonnet"]
     )
     print(selected_fm_model_names)
 
@@ -163,7 +173,7 @@ if __name__ == "__main__":
         fm_models,
         lambda x: x['isEnabled'] and is_selected(selected_fm_model_names, x["model_name"])
     )
-    model_outputs = main(prompt, enabled_fm_models)
+    model_outputs = main(prompt, encoded_image, enabled_fm_models)
 
     for model_output in model_outputs:
         with st.expander(f'#{model_output["model_name"].capitalize()}', expanded=True):

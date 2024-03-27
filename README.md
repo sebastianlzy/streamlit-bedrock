@@ -8,6 +8,7 @@
 2. Results from multiple models 
 3. Response time in seconds
 4. Configuration to select which model
+5. Ability to perform multimodal
 
 # To be added
 
@@ -39,4 +40,8 @@
 
 # Screenshots
 
-![say hello](./screenshots/ss-selection-of-model.png "Say hello")
+### Selection of models
+![selection-of-models](./screenshots/ss-selection-of-model.png "Selection of models")
+
+### Multi-modal
+![ss-multi-modal](./screenshots/ss-multi-modal-2.png "Multi-modal")
