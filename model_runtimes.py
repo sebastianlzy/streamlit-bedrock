@@ -80,8 +80,7 @@ def invoke_llama_13b_runtime(prompt, model_id):
     input_for_model_runtime = {
         "prompt": prompt,
         "temperature": temperature,
-        "top_p": top_p,
-        "max_gen_len": 512
+        "top_p": top_p
     }
     return invoke_runtime_model(model_id, input_for_model_runtime, accept="*/*")
 
@@ -90,7 +89,28 @@ def invoke_llama_70b_runtime(prompt, model_id):
     input_for_model_runtime = {
         "prompt": prompt,
         "temperature": temperature,
-        "top_p": top_p,
-        "max_gen_len": 512
+        "top_p": top_p
+    }
+    return invoke_runtime_model(model_id, input_for_model_runtime, accept="*/*")
+
+
+def invoke_mixtral_8x7b_runtime(prompt, model_id):
+    input_for_model_runtime = {
+        "prompt": prompt,
+        "temperature": temperature,
+    }
+    return invoke_runtime_model(model_id, input_for_model_runtime, accept="*/*")
+
+
+def invoke_claude_3_sonnet_runtime(prompt, model_id):
+    input_for_model_runtime = {
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": 1024,
+        "messages": [
+            {
+                "role": "user",
+                "content": [{"type": "text", "text": prompt}],
+            }
+        ],
     }
     return invoke_runtime_model(model_id, input_for_model_runtime, accept="*/*")

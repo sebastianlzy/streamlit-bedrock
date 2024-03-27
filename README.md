@@ -22,8 +22,8 @@
 - [x] llama13b
 - [x] llama70b
 - [x] titanText
-- [ ] mistral
-- [ ] claude sonnet
+- [x] mistral
+- [x] claude sonnet
 - [ ] claude haiku
 
 # Getting started

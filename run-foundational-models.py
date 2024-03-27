@@ -9,7 +9,8 @@ import pandas as pd
 import streamlit as st
 
 from model_runtimes import invoke_jurrasic_runtime, invoke_claude_2_runtime, invoke_cohere_runtime, \
-    invoke_llama_13b_runtime, invoke_llama_70b_runtime, invoke_titan_text_g1_runtime
+    invoke_llama_13b_runtime, invoke_llama_70b_runtime, invoke_titan_text_g1_runtime, invoke_mixtral_8x7b_runtime, \
+    invoke_claude_3_sonnet_runtime
 
 bedrock = boto3.client('bedrock')
 bedrock_runtime = boto3.client(service_name='bedrock-runtime')
@@ -60,6 +61,23 @@ fm_models = [
         "output_formatter": lambda _response: get(_response, 'results.0.outputText'),
         "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_titan_text_g1_runtime(_input_prompt, _model_id)
     },
+    {
+        "model_name": "mixtral_8x7b",
+        "model_id": "mistral.mixtral-8x7b-instruct-v0:1",
+        "isEnabled": True,
+        "output_formatter": lambda _response: get(_response, 'outputs.0.text'),
+        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_mixtral_8x7b_runtime(_input_prompt, _model_id)
+    },
+    {
+        "model_name": "claude_3_sonnet",
+        "model_id": "anthropic.claude-3-sonnet-20240229-v1:0",
+        "isEnabled": True,
+        "output_formatter": lambda _response: get(_response, 'content.0.text'),
+        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_claude_3_sonnet_runtime(
+            _input_prompt,
+            _model_id
+        )
+    },
 ]
 
 
@@ -86,7 +104,7 @@ def execute_thread(input_prompt, fm_model, model_outputs):
     response, response_in_seconds = measure_time_taken(
         lambda: fm_model["invoke_model_runtime"](input_prompt, fm_model["model_id"])
     )
-    
+
     model_output = {
         "model_name": model_name,
         "runtime_response": response,
@@ -127,7 +145,7 @@ if __name__ == "__main__":
     selected_fm_model_names = st.multiselect(
         'Select models',
         fm_model_names,
-        ["jurassic", "cohere", "claude_2"]
+        ["jurassic", "cohere", "claude_3_sonnet"]
     )
     print(selected_fm_model_names)
 
@@ -136,7 +154,7 @@ if __name__ == "__main__":
         lambda x: x['isEnabled'] and is_selected(selected_fm_model_names, x["model_name"])
     )
     model_outputs = main(prompt, enabled_fm_models)
-    
+
     for model_output in model_outputs:
         with st.expander(f'#{model_output["model_name"].capitalize()}', expanded=True):
             st.write(model_output["runtime_response_in_text"])
