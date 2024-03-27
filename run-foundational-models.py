@@ -127,7 +127,7 @@ if __name__ == "__main__":
     selected_fm_model_names = st.multiselect(
         'Select models',
         fm_model_names,
-        ["jurassic", "cohere", "claude_2", "llama_70b"]
+        ["jurassic", "cohere", "claude_2"]
     )
     print(selected_fm_model_names)
 
@@ -136,7 +136,7 @@ if __name__ == "__main__":
         lambda x: x['isEnabled'] and is_selected(selected_fm_model_names, x["model_name"])
     )
     model_outputs = main(prompt, enabled_fm_models)
-
+    
     for model_output in model_outputs:
         with st.expander(f'#{model_output["model_name"].capitalize()}', expanded=True):
             st.write(model_output["runtime_response_in_text"])

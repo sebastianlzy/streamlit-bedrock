@@ -8,13 +8,17 @@ top_p = 1
 temperature = 0
 top_k = 500
 
+
 def invoke_runtime_model(model_id, runtime_input, accept='application/json'):
     contentType = 'application/json'
-
-    body = json.dumps(runtime_input)
-    response = bedrock_runtime.invoke_model(body=body, modelId=model_id, accept=accept, contentType=contentType)
-    response_body = json.loads(response.get('body').read())
-    return response_body
+    try:
+        body = json.dumps(runtime_input)
+        response = bedrock_runtime.invoke_model(body=body, modelId=model_id, accept=accept, contentType=contentType)
+        response_body = json.loads(response.get('body').read())
+        return response_body
+    except Exception as e:
+        print(e)
+        return {}
 
 
 def invoke_jurrasic_runtime(prompt, model_id):
@@ -77,6 +81,7 @@ def invoke_llama_13b_runtime(prompt, model_id):
         "prompt": prompt,
         "temperature": temperature,
         "top_p": top_p,
+        "max_gen_len": 512
     }
     return invoke_runtime_model(model_id, input_for_model_runtime, accept="*/*")
 
@@ -86,5 +91,6 @@ def invoke_llama_70b_runtime(prompt, model_id):
         "prompt": prompt,
         "temperature": temperature,
         "top_p": top_p,
+        "max_gen_len": 512
     }
     return invoke_runtime_model(model_id, input_for_model_runtime, accept="*/*")
