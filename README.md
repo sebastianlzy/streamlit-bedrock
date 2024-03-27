@@ -14,11 +14,16 @@
 1. Cost calculation per request for each model
 2. Additional model(mistral, sonnet, haiku)
 
-
 # Getting started
 
-1. `pip install -r requirements.txt`
-2. `streamlit run your_script.py run-foundational-models.py`
+```
+> pip install -r requirements.txt
+> cp .env.sample .env # Update values inside
+> source .env
+> streamlit run your_script.py run-foundational-models.py
+
+```
+
 
 # Screenshots
 

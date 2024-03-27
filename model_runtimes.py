@@ -17,8 +17,7 @@ def invoke_runtime_model(model_id, runtime_input, accept='application/json'):
     return response_body
 
 
-def invoke_jurrasic_runtime(prompt):
-    model_id = os.environ.get("JURASSIC_MODEL_ID")
+def invoke_jurrasic_runtime(prompt, model_id):
     input_for_model_runtime = {
         'prompt': prompt,
         'maxTokens': 1024,
@@ -32,8 +31,7 @@ def invoke_jurrasic_runtime(prompt):
     return invoke_runtime_model(model_id, input_for_model_runtime)
 
 
-def invoke_amazon_titan_runtime(prompt):
-    model_id = os.environ.get("AMAZON_TITAN_MODEL_ID")
+def invoke_amazon_titan_runtime(prompt, model_id):
     input_for_model_runtime = {
         'inputText': prompt,
         'textGenerationConfig': {
@@ -46,8 +44,7 @@ def invoke_amazon_titan_runtime(prompt):
     return invoke_runtime_model(model_id, input_for_model_runtime)
 
 
-def invoke_cohere_runtime(prompt):
-    model_id = os.environ.get("COHERE_MODEL_ID")
+def invoke_cohere_runtime(prompt, model_id):
     input_for_model_runtime = {
         'prompt': prompt,
         'max_tokens': 1024,
@@ -60,8 +57,7 @@ def invoke_cohere_runtime(prompt):
     return invoke_runtime_model(model_id, input_for_model_runtime)
 
 
-def invoke_claude_2_runtime(prompt):
-    model_id = os.environ.get("CLAUDE_2_MODEL_ID")
+def invoke_claude_2_runtime(prompt, model_id):
     input_for_model_runtime = {
         "prompt": f'\n\nHuman: {prompt} \n\nAssistant:',
         "max_tokens_to_sample": 300,
@@ -76,8 +72,7 @@ def invoke_claude_2_runtime(prompt):
     return invoke_runtime_model(model_id, input_for_model_runtime, accept="*/*")
 
 
-def invoke_llama_13b_runtime(prompt):
-    model_id = os.environ.get("LLAMA_2_13B")
+def invoke_llama_13b_runtime(prompt, model_id):
     input_for_model_runtime = {
         "prompt": prompt,
         "temperature": temperature,
@@ -86,8 +81,7 @@ def invoke_llama_13b_runtime(prompt):
     return invoke_runtime_model(model_id, input_for_model_runtime, accept="*/*")
 
 
-def invoke_llama_70b_runtime(prompt):
-    model_id = os.environ.get("LLAMA_2_70B")
+def invoke_llama_70b_runtime(prompt, model_id):
     input_for_model_runtime = {
         "prompt": prompt,
         "temperature": temperature,

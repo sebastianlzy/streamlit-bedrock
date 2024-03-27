@@ -20,38 +20,38 @@ top_k = 500
 fm_models = [
     {
         "model_name": "jurassic",
-        "modelId": "ai21.j2-ultra",
+        "model_id": "ai21.j2-ultra",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'completions.0.data.text'),
-        "invoke_model_runtime": lambda _input_prompt: invoke_jurrasic_runtime(_input_prompt)
+        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_jurrasic_runtime(_input_prompt, _model_id)
     },
     {
         "model_name": "claude_2",
-        "modelId": "anthropic.claude-v2:1",
+        "model_id": "anthropic.claude-v2:1",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'completion'),
-        "invoke_model_runtime": lambda _input_prompt: invoke_claude_2_runtime(_input_prompt)
+        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_claude_2_runtime(_input_prompt, _model_id)
     },
     {
         "model_name": "cohere",
-        "modelId": "cohere.command-text-v14",
+        "model_id": "cohere.command-text-v14",
         "isEnabled": True,
         "output_formatter": lambda _response: " ".join(map_(get(_response, 'generations'), "text")),
-        "invoke_model_runtime": lambda _input_prompt: invoke_cohere_runtime(_input_prompt)
+        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_cohere_runtime(_input_prompt, _model_id)
     },
     {
         "model_name": "llama_13b",
-        "modelId": "meta.llama2-13b-chat-v1",
+        "model_id": "meta.llama2-13b-chat-v1",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'generation'),
-        "invoke_model_runtime": lambda _input_prompt: invoke_llama_13b_runtime(_input_prompt)
+        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_llama_13b_runtime(_input_prompt, _model_id)
     },
     {
         "model_name": "llama_70b",
-        "modelId": "meta.llama2-70b-chat-v1",
+        "model_id": "meta.llama2-70b-chat-v1",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'generation'),
-        "invoke_model_runtime": lambda _input_prompt: invoke_llama_70b_runtime(_input_prompt)
+        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_llama_70b_runtime(_input_prompt, _model_id)
     },
 ]
 
@@ -62,7 +62,7 @@ def list_foundational_models():
     table = []
 
     for model in models:
-        table.append([model.get('model_name'), model.get('modelId'), model.get('responseStreamingSupported')])
+        table.append([model.get('model_name'), model.get('model_id'), model.get('responseStreamingSupported')])
     return pd.DataFrame(table, columns=['ModelName', 'modelId', 'isStreamingSupported'])
 
 
@@ -77,7 +77,7 @@ def execute_thread(input_prompt, fm_model, model_outputs):
     model_name = fm_model["model_name"]
     print(f"executing {model_name} model")
     response, response_in_seconds = measure_time_taken(
-        lambda: fm_model["invoke_model_runtime"](input_prompt)
+        lambda: fm_model["invoke_model_runtime"](input_prompt, fm_model["model_id"])
     )
     model_output = {
         "model_name": model_name,
@@ -116,7 +116,11 @@ if __name__ == "__main__":
     st.divider()
 
     fm_model_names = pydash.map_(fm_models, "model_name")
-    selected_fm_model_names = st.multiselect('Select models', fm_model_names, fm_model_names)
+    selected_fm_model_names = st.multiselect(
+        'Select models',
+        fm_model_names,
+        ["jurassic", "cohere", "claude_2", "llama_70b"]
+    )
     print(selected_fm_model_names)
 
     enabled_fm_models = pydash.filter_(
