@@ -164,8 +164,7 @@ if __name__ == "__main__":
     selected_fm_model_names = st.multiselect(
         'Select models',
         fm_model_names,
-        # ["jurassic_ultra", "cohere_command", "claude_3_sonnet"]
-        ["claude_3_sonnet"]
+        ["jurassic_ultra", "cohere_command", "claude_3_sonnet"]
     )
     print(selected_fm_model_names)
 
