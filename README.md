@@ -7,12 +7,13 @@
 1. Multi-processing
 2. Results from multiple models (cohere, jurassic, claude2, llama13b, llama70b)
 3. Response time in seconds
+4. Configuration to select which model
 
 # To be added
 
 1. Cost calculation per request for each model
 2. Additional model(mistral, sonnet, haiku)
-3. Configuration to select which model
+
 
 # Getting started
 
@@ -21,4 +22,4 @@
 
 # Screenshots
 
-![say hello](./screenshots/screenshot-say-hello.png "Say hello")
+![say hello](./screenshots/ss-selection-of-model.png "Say hello")
