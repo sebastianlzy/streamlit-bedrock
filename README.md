@@ -1,6 +1,7 @@
 # Objective
 
-1. To explore the results from different model
+1. Increase our understanding of our model's performance by analyzing the results of various models.
+2. Understand our average response time by assessing the latency of each model.
 
 # Demo
 ![demo](./screenshots/streamlit-bedrock.gif "demo")
