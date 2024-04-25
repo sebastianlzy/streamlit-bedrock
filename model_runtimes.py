@@ -1,6 +1,6 @@
 import boto3
 import json
-import os
+from pydash import get
 
 bedrock = boto3.client('bedrock')
 bedrock_runtime = boto3.client(service_name='bedrock-runtime')
@@ -9,7 +9,9 @@ temperature = 0
 top_k = 500
 
 
-def invoke_runtime_model(model_id, runtime_input, accept='application/json'):
+def invoke_runtime_model(model_id, runtime_input,
+                         get_token_consumption=lambda _: {"input_tokens": 0, "output_tokens": 0},
+                         accept='application/json'):
     contentType = 'application/json'
     try:
         body = json.dumps(runtime_input)
@@ -17,7 +19,7 @@ def invoke_runtime_model(model_id, runtime_input, accept='application/json'):
         response = bedrock_runtime.invoke_model(body=body, modelId=model_id, accept=accept, contentType=contentType)
 
         response_body = json.loads(response.get('body').read())
-        return response_body
+        return response_body, get_token_consumption(response_body)
     except Exception as e:
         print(e)
         return {}
@@ -34,7 +36,14 @@ def invoke_jurrasic_ultra_runtime(input, model_id):
         'presencePenalty': {'scale': 0},
         'frequencyPenalty': {'scale': 0}
     }
-    return invoke_runtime_model(model_id, input_for_model_runtime)
+
+    def get_token_consumption(response_body):
+        return {
+            "input_tokens": len(get(response_body, 'prompt.tokens')),
+            "output_tokens": len(get(response_body, 'completions.0.data.tokens')),
+        }
+
+    return invoke_runtime_model(model_id, input_for_model_runtime, get_token_consumption)
 
 
 def invoke_titan_text_g1_runtime(input, model_id):
@@ -58,9 +67,23 @@ def invoke_cohere_command_runtime(input, model_id):
         'k': top_k,
         'p': top_p,
         'stop_sequences': [],
-        'return_likelihoods': 'NONE'
+        'return_likelihoods': 'ALL'
     }
-    return invoke_runtime_model(model_id, input_for_model_runtime)
+
+    def get_token_consumption(response_body):
+        tokens = get(response_body, 'generations.0.token_likelihoods')
+        input_tokens = 0
+        for token in tokens:
+            if get(token, "token") == '<EOP_TOKEN>':
+                break
+            input_tokens = input_tokens + 1
+
+        return {
+            "input_tokens": input_tokens,
+            "output_tokens": len(tokens) - input_tokens,
+        }
+
+    return invoke_runtime_model(model_id, input_for_model_runtime, get_token_consumption)
 
 
 def invoke_claude_2_runtime(input, model_id):
@@ -124,10 +147,16 @@ def invoke_claude_3_sonnet_runtime(input, model_id):
                 "role": "user",
                 "content": content
             }
-        ],
+        ]
     }
 
-    return invoke_runtime_model(model_id, input_for_model_runtime)
+    def get_token_consumption(response_body):
+        return {
+            "input_tokens": get(response_body, 'usage.input_tokens'),
+            "output_tokens": get(response_body, 'usage.output_tokens'),
+        }
+
+    return invoke_runtime_model(model_id, input_for_model_runtime, get_token_consumption)
 
 
 def invoke_claude_3_haiku_runtime(input, model_id):
@@ -139,6 +168,13 @@ def invoke_claude_3_haiku_runtime(input, model_id):
                 "role": "user",
                 "content": [{"type": "text", "text": input["prompt"]}],
             }
-        ],
+        ]
     }
-    return invoke_runtime_model(model_id, input_for_model_runtime, accept="*/*")
+
+    def get_token_consumption(response_body):
+        return {
+            "input_tokens": get(response_body, 'usage.input_tokens'),
+            "output_tokens": get(response_body, 'usage.output_tokens'),
+        }
+
+    return invoke_runtime_model(model_id, input_for_model_runtime, get_token_consumption)

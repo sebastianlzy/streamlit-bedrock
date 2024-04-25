@@ -6,4 +6,4 @@ tasks:
       - pyenv activate streamlit-bedrock
   run-streamlit:
     cmds:
-      - streamlit run your_script.py run-foundational-models.py  
+      - streamlit run run-foundational-models.py  

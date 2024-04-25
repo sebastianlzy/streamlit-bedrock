@@ -26,56 +26,72 @@ fm_models = [
         "model_id": "ai21.j2-ultra",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'completions.0.data.text'),
-        "invoke_model_runtime": lambda input, _model_id: invoke_jurrasic_ultra_runtime(input, _model_id)
+        "invoke_model_runtime": lambda input, _model_id: invoke_jurrasic_ultra_runtime(input, _model_id),
+        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.0188 / 1000 + _tokens.get(
+            "output_tokens") * 0.0188 / 1000,
     },
     {
         "model_name": "claude_2",
         "model_id": "anthropic.claude-v2:1",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'completion'),
-        "invoke_model_runtime": lambda input, _model_id: invoke_claude_2_runtime(input, _model_id)
+        "invoke_model_runtime": lambda input, _model_id: invoke_claude_2_runtime(input, _model_id),
+        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.00800 / 1000 + _tokens.get(
+            "output_tokens") * 0.02400 / 1000,
     },
     {
         "model_name": "cohere_command",
         "model_id": "cohere.command-text-v14",
         "isEnabled": True,
         "output_formatter": lambda _response: " ".join(map_(get(_response, 'generations'), "text")),
-        "invoke_model_runtime": lambda input, _model_id: invoke_cohere_command_runtime(input, _model_id)
+        "invoke_model_runtime": lambda input, _model_id: invoke_cohere_command_runtime(input, _model_id),
+        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.0015 / 1000 + _tokens.get(
+            "output_tokens") * 0.0020 / 1000,
     },
     {
         "model_name": "llama_13b",
         "model_id": "meta.llama2-13b-chat-v1",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'generation'),
-        "invoke_model_runtime": lambda input, _model_id: invoke_llama_13b_runtime(input, _model_id)
+        "invoke_model_runtime": lambda input, _model_id: invoke_llama_13b_runtime(input, _model_id),
+        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.00075 / 1000 + _tokens.get(
+            "output_tokens") * 0.00100 / 1000,
     },
     {
         "model_name": "llama_70b",
         "model_id": "meta.llama2-70b-chat-v1",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'generation'),
-        "invoke_model_runtime": lambda input, _model_id: invoke_llama_70b_runtime(input, _model_id)
+        "invoke_model_runtime": lambda input, _model_id: invoke_llama_70b_runtime(input, _model_id),
+        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.00195 / 1000 + _tokens.get(
+            "output_tokens") * 0.00256 / 1000,
     },
     {
         "model_name": "titan_text_lite",
         "model_id": "amazon.titan-text-lite-v1",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'results.0.outputText'),
-        "invoke_model_runtime": lambda input, _model_id: invoke_titan_text_g1_runtime(input, _model_id)
+        "invoke_model_runtime": lambda input, _model_id: invoke_titan_text_g1_runtime(input, _model_id),
+        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.0003 / 1000 + _tokens.get(
+            "output_tokens") * 0.0004 / 1000,
     },
     {
         "model_name": "mixtral_8x7b",
         "model_id": "mistral.mixtral-8x7b-instruct-v0:1",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'outputs.0.text'),
-        "invoke_model_runtime": lambda input, _model_id: invoke_mixtral_8x7b_runtime(input, _model_id)
+        "invoke_model_runtime": lambda input, _model_id: invoke_mixtral_8x7b_runtime(input, _model_id),
+        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.00045 / 1000 + _tokens.get(
+            "output_tokens") * 0.0007 / 1000,
     },
     {
         "model_name": "claude_3_sonnet",
         "model_id": "anthropic.claude-3-sonnet-20240229-v1:0",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'content.0.text'),
-        "invoke_model_runtime": lambda input, _model_id: invoke_claude_3_sonnet_runtime(input, _model_id)
+        "invoke_model_runtime": lambda input, _model_id: invoke_claude_3_sonnet_runtime(input, _model_id),
+        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.00300 / 1000 + _tokens.get(
+            "output_tokens") * 0.01500 / 1000,
     },
     {
         "model_name": "claude_3_haiku",
@@ -85,7 +101,9 @@ fm_models = [
         "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_claude_3_haiku_runtime(
             _input_prompt,
             _model_id
-        )
+        ),
+        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.00025 / 1000 + _tokens.get(
+            "output_tokens") * 0.00125 / 1000,
     },
 ]
 
@@ -102,15 +120,15 @@ def list_foundational_models():
 
 def measure_time_taken(cb):
     start_time = time.time()
-    response = cb()
+    response_body, tokens_consumed = cb()
     time_in_seconds = time.time() - start_time
-    return response, time_in_seconds
+    return response_body, tokens_consumed, time_in_seconds
 
 
 def execute_thread(input_prompt, input_image, fm_model, model_outputs):
     model_name = fm_model["model_name"]
     print(f"executing {model_name} model")
-    response, response_in_seconds = measure_time_taken(
+    response_body, tokens_consumed, response_in_seconds = measure_time_taken(
         lambda: fm_model["invoke_model_runtime"](
             {"prompt": input_prompt, "image": input_image},
             fm_model["model_id"])
@@ -118,9 +136,10 @@ def execute_thread(input_prompt, input_image, fm_model, model_outputs):
 
     model_output = {
         "model_name": model_name,
-        "runtime_response": response,
-        "runtime_response_in_text": fm_model["output_formatter"](response),
-        "time_taken_in_seconds": response_in_seconds
+        "runtime_response": response_body,
+        "runtime_response_in_text": fm_model["output_formatter"](response_body),
+        "time_taken_in_seconds": response_in_seconds,
+        "total_cost": fm_model["calculate_cost"](tokens_consumed),
     }
     print(f"{model_name} executed")
     model_outputs.append(model_output)
@@ -175,9 +194,10 @@ if __name__ == "__main__":
     model_outputs = main(prompt, encoded_image, enabled_fm_models)
 
     for model_output in model_outputs:
-        with st.expander(f'#{model_output["model_name"].capitalize()}', expanded=True):
+        with st.expander(f'{model_output["model_name"].capitalize()} took {model_output["time_taken_in_seconds"]} sec', expanded=True):
             st.write(model_output["runtime_response_in_text"])
-            st.caption(f'{model_output["time_taken_in_seconds"]} sec')
+            if model_output["total_cost"] > 0:
+                st.caption(f'${model_output["total_cost"]}')
 
     with st.expander(f'#List of models'):
         st.data_editor(list_foundational_models(), use_container_width=True)
