@@ -22,12 +22,19 @@
 # Models available
 
 - [x] cohere
-- [x] jurassic
+- [x] jurassic ultra
 - [x] claude_v2
 - [x] llama13b
 - [x] llama70b
 - [x] titanText
 - [x] mistral
+- [x] claude sonnet
+- [x] claude haiku
+
+# Models with cost calculation
+
+- [x] cohere
+- [x] jurassic ultra
 - [x] claude sonnet
 - [x] claude haiku
 
