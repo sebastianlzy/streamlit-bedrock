@@ -173,7 +173,7 @@ if __name__ == "__main__":
         html_code = f.read()
     components.html(html_code, height=10)
     # inject_ga(st.experimental_user["email"])
-    inject_ga()
+    # inject_ga()
 
     st.title(f'Prompt')
     prompt = st.text_area("Prompt", custom_prompt, label_visibility="hidden")
