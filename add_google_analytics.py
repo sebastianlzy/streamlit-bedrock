@@ -5,7 +5,7 @@ import shutil
 import streamlit as st
 
 
-def inject_ga(user_email):
+def inject_ga(user_email="anonymous"):
     GA_ID = "google_analytics"
 
     GA_JS = """

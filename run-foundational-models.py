@@ -171,11 +171,10 @@ def is_selected(arr, predicate):
 if __name__ == "__main__":
     with open("analytics.html", "r") as f:
         html_code = f.read()
-    components.html(html_code, height=0)
-    inject_ga(st.experimental_user["email"])
-    
-    
-    
+    components.html(html_code, height=10)
+    # inject_ga(st.experimental_user["email"])
+    inject_ga()
+
     st.title(f'Prompt')
     prompt = st.text_area("Prompt", custom_prompt, label_visibility="hidden")
     uploaded_file = st.file_uploader("Choose a file (only works with Claude Sonnet)")
@@ -211,5 +210,3 @@ if __name__ == "__main__":
 
     with st.expander(f'#List of models'):
         st.data_editor(list_foundational_models(), use_container_width=True)
-
-
