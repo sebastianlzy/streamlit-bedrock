@@ -14,7 +14,6 @@ import streamlit.components.v1 as components
 import streamlit_analytics2 as streamlit_analytics
 from model_configurations import fm_models
 
-
 bedrock = boto3.client('bedrock')
 bedrock_runtime = boto3.client(service_name='bedrock-runtime')
 top_p = 1
@@ -85,6 +84,9 @@ def main():
         html_code = f.read()
     components.html(html_code, height=10)
 
+    user_email = st.experimental_user["email"]
+    st.text_input(label="user_email", value=user_email, label_visibility="hidden", disabled=True)
+    
     st.title(f'Prompt')
     prompt = st.text_area("Prompt", custom_prompt, label_visibility="hidden")
     uploaded_file = st.file_uploader("Choose a file (only works with Claude Sonnet)")
@@ -124,7 +126,6 @@ def main():
 
 if __name__ == "__main__":
     analytics_password = st.secrets["analytics"]["password"]
-    # print(analytics_password)
     with streamlit_analytics.track(
             unsafe_password=analytics_password,
             streamlit_secrets_firestore_key="firebase",
