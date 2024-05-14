@@ -1,113 +1,25 @@
 import base64
 
 import multiprocess as mp
+import os
 
 import boto3
 import pydash
-from pydash import get, map_
+
 import time
 from prompts import *
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
-from add_google_analytics import inject_ga
+import streamlit_analytics2 as streamlit_analytics
+from model_configurations import fm_models
 
-from model_runtimes import invoke_jurrasic_ultra_runtime, invoke_claude_2_runtime, invoke_cohere_command_runtime, \
-    invoke_llama_13b_runtime, invoke_llama_70b_runtime, invoke_titan_text_g1_runtime, invoke_mixtral_8x7b_runtime, \
-    invoke_claude_3_sonnet_runtime, invoke_claude_3_haiku_runtime
 
 bedrock = boto3.client('bedrock')
 bedrock_runtime = boto3.client(service_name='bedrock-runtime')
 top_p = 1
 temperature = 0
 top_k = 500
-
-fm_models = [
-    {
-        "model_name": "jurassic_ultra",
-        "model_id": "ai21.j2-ultra",
-        "isEnabled": True,
-        "output_formatter": lambda _response: get(_response, 'completions.0.data.text'),
-        "invoke_model_runtime": lambda input, _model_id: invoke_jurrasic_ultra_runtime(input, _model_id),
-        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.0188 / 1000 + _tokens.get(
-            "output_tokens") * 0.0188 / 1000,
-    },
-    {
-        "model_name": "claude_2",
-        "model_id": "anthropic.claude-v2:1",
-        "isEnabled": True,
-        "output_formatter": lambda _response: get(_response, 'completion'),
-        "invoke_model_runtime": lambda input, _model_id: invoke_claude_2_runtime(input, _model_id),
-        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.00800 / 1000 + _tokens.get(
-            "output_tokens") * 0.02400 / 1000,
-    },
-    {
-        "model_name": "cohere_command",
-        "model_id": "cohere.command-text-v14",
-        "isEnabled": True,
-        "output_formatter": lambda _response: " ".join(map_(get(_response, 'generations'), "text")),
-        "invoke_model_runtime": lambda input, _model_id: invoke_cohere_command_runtime(input, _model_id),
-        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.0015 / 1000 + _tokens.get(
-            "output_tokens") * 0.0020 / 1000,
-    },
-    {
-        "model_name": "llama_13b",
-        "model_id": "meta.llama2-13b-chat-v1",
-        "isEnabled": True,
-        "output_formatter": lambda _response: get(_response, 'generation'),
-        "invoke_model_runtime": lambda input, _model_id: invoke_llama_13b_runtime(input, _model_id),
-        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.00075 / 1000 + _tokens.get(
-            "output_tokens") * 0.00100 / 1000,
-    },
-    {
-        "model_name": "llama_70b",
-        "model_id": "meta.llama2-70b-chat-v1",
-        "isEnabled": True,
-        "output_formatter": lambda _response: get(_response, 'generation'),
-        "invoke_model_runtime": lambda input, _model_id: invoke_llama_70b_runtime(input, _model_id),
-        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.00195 / 1000 + _tokens.get(
-            "output_tokens") * 0.00256 / 1000,
-    },
-    {
-        "model_name": "titan_text_lite",
-        "model_id": "amazon.titan-text-lite-v1",
-        "isEnabled": True,
-        "output_formatter": lambda _response: get(_response, 'results.0.outputText'),
-        "invoke_model_runtime": lambda input, _model_id: invoke_titan_text_g1_runtime(input, _model_id),
-        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.0003 / 1000 + _tokens.get(
-            "output_tokens") * 0.0004 / 1000,
-    },
-    {
-        "model_name": "mixtral_8x7b",
-        "model_id": "mistral.mixtral-8x7b-instruct-v0:1",
-        "isEnabled": True,
-        "output_formatter": lambda _response: get(_response, 'outputs.0.text'),
-        "invoke_model_runtime": lambda input, _model_id: invoke_mixtral_8x7b_runtime(input, _model_id),
-        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.00045 / 1000 + _tokens.get(
-            "output_tokens") * 0.0007 / 1000,
-    },
-    {
-        "model_name": "claude_3_sonnet",
-        "model_id": "anthropic.claude-3-sonnet-20240229-v1:0",
-        "isEnabled": True,
-        "output_formatter": lambda _response: get(_response, 'content.0.text'),
-        "invoke_model_runtime": lambda input, _model_id: invoke_claude_3_sonnet_runtime(input, _model_id),
-        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.00300 / 1000 + _tokens.get(
-            "output_tokens") * 0.01500 / 1000,
-    },
-    {
-        "model_name": "claude_3_haiku",
-        "model_id": "anthropic.claude-3-haiku-20240307-v1:0",
-        "isEnabled": True,
-        "output_formatter": lambda _response: get(_response, 'content.0.text'),
-        "invoke_model_runtime": lambda _input_prompt, _model_id: invoke_claude_3_haiku_runtime(
-            _input_prompt,
-            _model_id
-        ),
-        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.00025 / 1000 + _tokens.get(
-            "output_tokens") * 0.00125 / 1000,
-    },
-]
 
 
 def list_foundational_models():
@@ -148,7 +60,7 @@ def execute_thread(input_prompt, input_image, fm_model, model_outputs):
     return model_output
 
 
-def main(input_prompt, input_image, fm_models):
+def invoke_models_in_parallel(input_prompt, input_image, fm_models):
     jobs = []
     manager = mp.Manager()
     model_outputs = manager.list()
@@ -168,12 +80,10 @@ def is_selected(arr, predicate):
     return pydash.find_index(arr, lambda x: x == predicate) > - 1
 
 
-if __name__ == "__main__":
+def main():
     with open("analytics.html", "r") as f:
         html_code = f.read()
     components.html(html_code, height=10)
-    # inject_ga(st.experimental_user["email"])
-    # inject_ga()
 
     st.title(f'Prompt')
     prompt = st.text_area("Prompt", custom_prompt, label_visibility="hidden")
@@ -199,7 +109,7 @@ if __name__ == "__main__":
         fm_models,
         lambda x: x['isEnabled'] and is_selected(selected_fm_model_names, x["model_name"])
     )
-    model_outputs = main(prompt, encoded_image, enabled_fm_models)
+    model_outputs = invoke_models_in_parallel(prompt, encoded_image, enabled_fm_models)
 
     for model_output in model_outputs:
         with st.expander(f'{model_output["model_name"].capitalize()} took {model_output["time_taken_in_seconds"]} sec',
@@ -210,3 +120,10 @@ if __name__ == "__main__":
 
     with st.expander(f'#List of models'):
         st.data_editor(list_foundational_models(), use_container_width=True)
+
+
+if __name__ == "__main__":
+    analytics_password = st.secrets["analytics"]["password"]
+    # print(analytics_password)
+    with streamlit_analytics.track(unsafe_password=analytics_password):
+        main()

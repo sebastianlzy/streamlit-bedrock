@@ -242,3 +242,7 @@ cython_debug/
 #.idea/
 
 .DS_Store
+
+
+# Streamlit
+.streamlit/*
