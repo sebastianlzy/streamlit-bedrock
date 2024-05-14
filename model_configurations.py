@@ -56,8 +56,8 @@ fm_models = [
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'generation'),
         "invoke_model_runtime": lambda input, _model_id: invoke_llama_3_70b_runtime(input, _model_id),
-        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.00195 / 1000 + _tokens.get(
-            "output_tokens") * 0.00256 / 1000,
+        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.00265 / 1000 + _tokens.get(
+            "output_tokens") * 0.0035 / 1000,
     },
     {
         "model_name": "titan_text_lite",
