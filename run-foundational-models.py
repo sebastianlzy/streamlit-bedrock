@@ -10,6 +10,7 @@ from prompts import *
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
+from add_google_analytics import inject_ga
 
 from model_runtimes import invoke_jurrasic_ultra_runtime, invoke_claude_2_runtime, invoke_cohere_command_runtime, \
     invoke_llama_13b_runtime, invoke_llama_70b_runtime, invoke_titan_text_g1_runtime, invoke_mixtral_8x7b_runtime, \
@@ -171,8 +172,11 @@ if __name__ == "__main__":
     with open("analytics.html", "r") as f:
         html_code = f.read()
     components.html(html_code, height=0)
-
-    st.title("Prompt")
+    inject_ga(st.experimental_user["email"])
+    
+    
+    
+    st.title(f'Prompt')
     prompt = st.text_area("Prompt", custom_prompt, label_visibility="hidden")
     uploaded_file = st.file_uploader("Choose a file (only works with Claude Sonnet)")
     encoded_image = None
