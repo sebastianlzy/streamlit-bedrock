@@ -9,6 +9,7 @@ import time
 from prompts import *
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
 from model_runtimes import invoke_jurrasic_ultra_runtime, invoke_claude_2_runtime, invoke_cohere_command_runtime, \
     invoke_llama_13b_runtime, invoke_llama_70b_runtime, invoke_titan_text_g1_runtime, invoke_mixtral_8x7b_runtime, \
@@ -194,10 +195,15 @@ if __name__ == "__main__":
     model_outputs = main(prompt, encoded_image, enabled_fm_models)
 
     for model_output in model_outputs:
-        with st.expander(f'{model_output["model_name"].capitalize()} took {model_output["time_taken_in_seconds"]} sec', expanded=True):
+        with st.expander(f'{model_output["model_name"].capitalize()} took {model_output["time_taken_in_seconds"]} sec',
+                         expanded=True):
             st.write(model_output["runtime_response_in_text"])
             if model_output["total_cost"] > 0:
                 st.caption(f'${model_output["total_cost"]}')
 
     with st.expander(f'#List of models'):
         st.data_editor(list_foundational_models(), use_container_width=True)
+
+    with open("analytics.html", "r") as f:
+        html_code = f.read()
+        components.html(html_code, height=0)
