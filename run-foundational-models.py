@@ -125,5 +125,10 @@ def main():
 if __name__ == "__main__":
     analytics_password = st.secrets["analytics"]["password"]
     # print(analytics_password)
-    with streamlit_analytics.track(unsafe_password=analytics_password):
+    with streamlit_analytics.track(
+            unsafe_password=analytics_password,
+            streamlit_secrets_firestore_key="firebase",
+            firestore_collection_name="streamlit-analytics2",
+            firestore_project_name="streamlit-bedrock"
+    ):
         main()

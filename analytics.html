@@ -11,30 +11,3 @@
 
     gtag('config', 'G-P3G2VPJCF7');
 </script>
-
-<script>
-    (function (n, i, v, r, s, c, x, z) {
-        x = window.AwsRumClient = {q: [], n: n, i: i, v: v, r: r, c: c};
-        window[n] = function (c, p) {
-            x.q.push({c: c, p: p});
-        };
-        z = document.createElement('script');
-        z.async = true;
-        z.src = s;
-        document.head.insertBefore(z, document.head.getElementsByTagName('script')[0]);
-    })(
-        'cwr',
-        '0fa8df1e-d52e-433f-b9df-fb4e5b8d94e8',
-        '1.0.0',
-        'us-east-1',
-        'https://client.rum.us-east-1.amazonaws.com/1.16.1/cwr.js',
-        {
-            sessionSampleRate: 1,
-            identityPoolId: "us-east-1:baff2d0d-9fb6-420f-a5de-83b9a0d155d4",
-            endpoint: "https://dataplane.rum.us-east-1.amazonaws.com",
-            telemetries: ["performance", "errors", "http"],
-            allowCookies: true,
-            enableXRay: false
-        }
-    );
-</script>
