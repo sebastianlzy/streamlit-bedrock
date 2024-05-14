@@ -119,6 +119,23 @@ def invoke_llama_2_70b_runtime(input, model_id):
     return invoke_runtime_model(model_id, input_for_model_runtime, accept="*/*")
 
 
+def invoke_llama_3_70b_runtime(input, model_id):
+    prompt = f"""
+        <|begin_of_text|>
+        <|start_header_id|>user<|end_header_id|>
+        {input["prompt"]}
+        <|eot_id|>
+        <|start_header_id|>assistant<|end_header_id|>
+    """
+    
+    input_for_model_runtime = {
+        "prompt": prompt,
+        "temperature": temperature,
+        "top_p": top_p
+    }
+    return invoke_runtime_model(model_id, input_for_model_runtime, accept="*/*")
+
+
 def invoke_mixtral_8x7b_runtime(input, model_id):
     input_for_model_runtime = {
         "prompt": input["prompt"],

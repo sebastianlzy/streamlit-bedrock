@@ -86,7 +86,7 @@ def main():
 
     user_email = st.experimental_user["email"]
     st.text_input(label="user_email", value=user_email, label_visibility="hidden", disabled=True)
-    
+
     st.title(f'Prompt')
     prompt = st.text_area("Prompt", custom_prompt, label_visibility="hidden")
     uploaded_file = st.file_uploader("Choose a file (only works with Claude Sonnet)")
@@ -100,17 +100,22 @@ def main():
     st.divider()
 
     fm_model_names = pydash.map_(fm_models, "model_name")
+    if 'default_models' not in st.session_state:
+        st.session_state['default_models'] = ["jurassic_ultra", "cohere_command", "claude_3_sonnet"]
+
+    default_models = st.session_state['default_models']
+
     selected_fm_model_names = st.multiselect(
         'Select models',
         fm_model_names,
-        ["jurassic_ultra", "cohere_command", "claude_3_sonnet"]
+        default_models
     )
-    print(selected_fm_model_names)
 
     enabled_fm_models = pydash.filter_(
         fm_models,
         lambda x: x['isEnabled'] and is_selected(selected_fm_model_names, x["model_name"])
     )
+
     model_outputs = invoke_models_in_parallel(prompt, encoded_image, enabled_fm_models)
 
     for model_output in model_outputs:
