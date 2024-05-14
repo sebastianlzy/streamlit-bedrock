@@ -1,5 +1,5 @@
 from model_runtimes import invoke_jurrasic_ultra_runtime, invoke_claude_2_runtime, invoke_cohere_command_runtime, \
-    invoke_llama_13b_runtime, invoke_llama_70b_runtime, invoke_titan_text_g1_runtime, invoke_mixtral_8x7b_runtime, \
+    invoke_llama_2_13b_runtime, invoke_llama_2_70b_runtime, invoke_titan_text_g1_runtime, invoke_mixtral_8x7b_runtime, \
     invoke_claude_3_sonnet_runtime, invoke_claude_3_haiku_runtime
 
 from pydash import get, map_
@@ -33,20 +33,20 @@ fm_models = [
             "output_tokens") * 0.0020 / 1000,
     },
     {
-        "model_name": "llama_13b",
+        "model_name": "llama_2_13b",
         "model_id": "meta.llama2-13b-chat-v1",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'generation'),
-        "invoke_model_runtime": lambda input, _model_id: invoke_llama_13b_runtime(input, _model_id),
+        "invoke_model_runtime": lambda input, _model_id: invoke_llama_2_13b_runtime(input, _model_id),
         "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.00075 / 1000 + _tokens.get(
             "output_tokens") * 0.00100 / 1000,
     },
     {
-        "model_name": "llama_70b",
+        "model_name": "llama_2_70b",
         "model_id": "meta.llama2-70b-chat-v1",
         "isEnabled": True,
         "output_formatter": lambda _response: get(_response, 'generation'),
-        "invoke_model_runtime": lambda input, _model_id: invoke_llama_70b_runtime(input, _model_id),
+        "invoke_model_runtime": lambda input, _model_id: invoke_llama_2_70b_runtime(input, _model_id),
         "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.00195 / 1000 + _tokens.get(
             "output_tokens") * 0.00256 / 1000,
     },

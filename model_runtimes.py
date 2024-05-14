@@ -101,7 +101,7 @@ def invoke_claude_2_runtime(input, model_id):
     return invoke_runtime_model(model_id, input_for_model_runtime, accept="*/*")
 
 
-def invoke_llama_13b_runtime(input, model_id):
+def invoke_llama_2_13b_runtime(input, model_id):
     input_for_model_runtime = {
         "prompt": input["prompt"],
         "temperature": temperature,
@@ -110,7 +110,7 @@ def invoke_llama_13b_runtime(input, model_id):
     return invoke_runtime_model(model_id, input_for_model_runtime, accept="*/*")
 
 
-def invoke_llama_70b_runtime(input, model_id):
+def invoke_llama_2_70b_runtime(input, model_id):
     input_for_model_runtime = {
         "prompt": input["prompt"],
         "temperature": temperature,
