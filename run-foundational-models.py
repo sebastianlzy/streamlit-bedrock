@@ -85,65 +85,64 @@ def main():
 
     st.title(f'Prompt')
     prompt = st.text_area("Prompt", custom_prompt, label_visibility="hidden")
+
+    analytics_password = st.secrets["ANALYTICS"]["DASHBOARD_PASSWORD"]
+    streamlit_analytics.start_tracking()
+
     uploaded_file = st.file_uploader(
         "This feature utilises Textract for PDF. For images, it only works with Claude Sonnet")
     encoded_image = None
 
-    analytics_password = st.secrets["ANALYTICS"]["DASHBOARD_PASSWORD"]
+    user_email = st.experimental_user["email"]
+    st.text_input(label="user_email", value=user_email, label_visibility="hidden", disabled=True)
 
-    with streamlit_analytics.track(
-            unsafe_password=analytics_password,
-            streamlit_secrets_firestore_key="firebase",
-            firestore_collection_name="streamlit-analytics2",
-            firestore_project_name="streamlit-bedrock"
-    ):
+    if uploaded_file is not None:
+        # To read file as bytes:
+        bytes_data = uploaded_file.getvalue()
+        file_name = uploaded_file.name
+        encoded_image = base64.b64encode(bytes_data).decode('utf-8')
 
-        user_email = st.experimental_user["email"]
-        st.text_input(label="user_email", value=user_email, label_visibility="hidden", disabled=True)
+        if is_file_a_pdf(file_name):
+            text = extract_text_from_pdf(bytes_data, file_name)
+            prompt = f'### PDF Text ### \n {text} \n ### Instruction ### {prompt}'
+            encoded_image = None
+            print(prompt)
 
-        if uploaded_file is not None:
-            # To read file as bytes:
-            bytes_data = uploaded_file.getvalue()
-            file_name = uploaded_file.name
-            encoded_image = base64.b64encode(bytes_data).decode('utf-8')
+    st.divider()
 
-            if is_file_a_pdf(file_name):
-                text = extract_text_from_pdf(bytes_data, file_name)
-                prompt = f'### PDF Text ### \n {text} \n ### Instruction ### {prompt}'
-                encoded_image = None
-                print(prompt)
+    fm_model_names = pydash.map_(fm_models, "model_name")
+    default_models = ["jurassic_ultra", "cohere_command", "claude_3_sonnet"]
 
-        st.divider()
+    selected_fm_model_names = st.multiselect(
+        'Select models',
+        fm_model_names,
+        default_models
+    )
 
-        fm_model_names = pydash.map_(fm_models, "model_name")
-        if 'default_models' not in st.session_state:
-            st.session_state['default_models'] = ["jurassic_ultra", "cohere_command", "claude_3_sonnet"]
+    enabled_fm_models = pydash.filter_(
+        fm_models,
+        lambda x: x['isEnabled'] and is_selected(selected_fm_model_names, x["model_name"])
+    )
 
-        default_models = st.session_state['default_models']
+    streamlit_analytics.stop_tracking(
+        unsafe_password=analytics_password,
+        streamlit_secrets_firestore_key="firebase",
+        firestore_collection_name="streamlit-analytics2",
+        firestore_project_name="streamlit-bedrock"
+    )
 
-        selected_fm_model_names = st.multiselect(
-            'Select models',
-            fm_model_names,
-            default_models
-        )
+    model_outputs = invoke_models_in_parallel(prompt, encoded_image, enabled_fm_models)
 
-        enabled_fm_models = pydash.filter_(
-            fm_models,
-            lambda x: x['isEnabled'] and is_selected(selected_fm_model_names, x["model_name"])
-        )
+    for model_output in model_outputs:
+        with st.expander(
+                f'{model_output["model_name"].capitalize()} took {model_output["time_taken_in_seconds"]} sec',
+                expanded=True):
+            st.write(model_output["runtime_response_in_text"])
+            if model_output["total_cost"] > 0:
+                st.caption(f'${model_output["total_cost"]}')
 
-        model_outputs = invoke_models_in_parallel(prompt, encoded_image, enabled_fm_models)
-
-        for model_output in model_outputs:
-            with st.expander(
-                    f'{model_output["model_name"].capitalize()} took {model_output["time_taken_in_seconds"]} sec',
-                    expanded=True):
-                st.write(model_output["runtime_response_in_text"])
-                if model_output["total_cost"] > 0:
-                    st.caption(f'${model_output["total_cost"]}')
-
-        with st.expander(f'#List of models'):
-            st.data_editor(list_foundational_models(), use_container_width=True)
+    with st.expander(f'#List of models'):
+        st.data_editor(list_foundational_models(), use_container_width=True)
 
 
 if __name__ == "__main__":
