@@ -89,7 +89,7 @@ def main():
     st.title(f'Prompt')
     prompt = st.text_area("Prompt", custom_prompt, label_visibility="hidden")
     uploaded_file = st.file_uploader(
-        "This feature utilises Textract for PDF. For images, it only works with Claude Sonnet)")
+        "This feature utilises Textract for PDF. For images, it only works with Claude Sonnet")
     encoded_image = None
 
     if uploaded_file is not None:
