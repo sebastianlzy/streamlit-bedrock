@@ -83,40 +83,49 @@ def main():
         html_code = f.read()
     components.html(html_code, height=10)
 
-    user_email = st.experimental_user["email"]
-    st.text_input(label="user_email", value=user_email, label_visibility="hidden", disabled=True)
-
     st.title(f'Prompt')
     prompt = st.text_area("Prompt", custom_prompt, label_visibility="hidden")
     uploaded_file = st.file_uploader(
         "This feature utilises Textract for PDF. For images, it only works with Claude Sonnet")
     encoded_image = None
 
-    if uploaded_file is not None:
-        # To read file as bytes:
-        bytes_data = uploaded_file.getvalue()
-        file_name = uploaded_file.name
-        encoded_image = base64.b64encode(bytes_data).decode('utf-8')
+    analytics_password = st.secrets["ANALYTICS"]["DASHBOARD_PASSWORD"]
 
-        if is_file_a_pdf(file_name):
-            text = extract_text_from_pdf(bytes_data, file_name)
-            prompt = f'### PDF Text ### \n {text} \n ### Instruction ### {prompt}'
-            encoded_image = None
-            print(prompt)
+    with streamlit_analytics.track(
+            unsafe_password=analytics_password,
+            streamlit_secrets_firestore_key="firebase",
+            firestore_collection_name="streamlit-analytics2",
+            firestore_project_name="streamlit-bedrock"
+    ):
 
-    st.divider()
+        user_email = st.experimental_user["email"]
+        st.text_input(label="user_email", value=user_email, label_visibility="hidden", disabled=True)
 
-    fm_model_names = pydash.map_(fm_models, "model_name")
-    if 'default_models' not in st.session_state:
-        st.session_state['default_models'] = ["jurassic_ultra", "cohere_command", "claude_3_sonnet"]
+        if uploaded_file is not None:
+            # To read file as bytes:
+            bytes_data = uploaded_file.getvalue()
+            file_name = uploaded_file.name
+            encoded_image = base64.b64encode(bytes_data).decode('utf-8')
 
-    default_models = st.session_state['default_models']
+            if is_file_a_pdf(file_name):
+                text = extract_text_from_pdf(bytes_data, file_name)
+                prompt = f'### PDF Text ### \n {text} \n ### Instruction ### {prompt}'
+                encoded_image = None
+                print(prompt)
 
-    selected_fm_model_names = st.multiselect(
-        'Select models',
-        fm_model_names,
-        default_models
-    )
+        st.divider()
+
+        fm_model_names = pydash.map_(fm_models, "model_name")
+        if 'default_models' not in st.session_state:
+            st.session_state['default_models'] = ["jurassic_ultra", "cohere_command", "claude_3_sonnet"]
+
+        default_models = st.session_state['default_models']
+
+        selected_fm_model_names = st.multiselect(
+            'Select models',
+            fm_model_names,
+            default_models
+        )
 
     enabled_fm_models = pydash.filter_(
         fm_models,
@@ -137,11 +146,4 @@ def main():
 
 
 if __name__ == "__main__":
-    analytics_password = st.secrets["ANALYTICS"]["DASHBOARD_PASSWORD"]
-    with streamlit_analytics.track(
-            unsafe_password=analytics_password,
-            streamlit_secrets_firestore_key="firebase",
-            firestore_collection_name="streamlit-analytics2",
-            firestore_project_name="streamlit-bedrock"
-    ):
-        main()
+    main()
