@@ -126,9 +126,9 @@ def main():
 
     streamlit_analytics.stop_tracking(
         unsafe_password=analytics_password,
-        streamlit_secrets_firestore_key="firebase",
-        firestore_collection_name="streamlit-analytics2",
-        firestore_project_name="streamlit-bedrock"
+        # streamlit_secrets_firestore_key="firebase",
+        # firestore_collection_name="streamlit-analytics2",
+        # firestore_project_name="streamlit-bedrock"
     )
 
     model_outputs = invoke_models_in_parallel(prompt, encoded_image, enabled_fm_models)
