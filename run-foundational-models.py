@@ -127,22 +127,23 @@ def main():
             default_models
         )
 
-    enabled_fm_models = pydash.filter_(
-        fm_models,
-        lambda x: x['isEnabled'] and is_selected(selected_fm_model_names, x["model_name"])
-    )
+        enabled_fm_models = pydash.filter_(
+            fm_models,
+            lambda x: x['isEnabled'] and is_selected(selected_fm_model_names, x["model_name"])
+        )
 
-    model_outputs = invoke_models_in_parallel(prompt, encoded_image, enabled_fm_models)
+        model_outputs = invoke_models_in_parallel(prompt, encoded_image, enabled_fm_models)
 
-    for model_output in model_outputs:
-        with st.expander(f'{model_output["model_name"].capitalize()} took {model_output["time_taken_in_seconds"]} sec',
-                         expanded=True):
-            st.write(model_output["runtime_response_in_text"])
-            if model_output["total_cost"] > 0:
-                st.caption(f'${model_output["total_cost"]}')
+        for model_output in model_outputs:
+            with st.expander(
+                    f'{model_output["model_name"].capitalize()} took {model_output["time_taken_in_seconds"]} sec',
+                    expanded=True):
+                st.write(model_output["runtime_response_in_text"])
+                if model_output["total_cost"] > 0:
+                    st.caption(f'${model_output["total_cost"]}')
 
-    with st.expander(f'#List of models'):
-        st.data_editor(list_foundational_models(), use_container_width=True)
+        with st.expander(f'#List of models'):
+            st.data_editor(list_foundational_models(), use_container_width=True)
 
 
 if __name__ == "__main__":
