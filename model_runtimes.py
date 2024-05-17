@@ -1,6 +1,10 @@
 import boto3
 import json
+
+import pydash
 from pydash import get
+
+from prompt_generator import generate_better_prompt_via_meta_prompting
 
 bedrock_runtime = boto3.client(service_name='bedrock-runtime')
 top_p = 1
@@ -11,13 +15,13 @@ top_k = 500
 def invoke_runtime_model(model_id, runtime_input,
                          get_token_consumption=lambda _: {"input_tokens": 0, "output_tokens": 0},
                          accept='application/json'):
-    contentType = 'application/json'
+    content_type = 'application/json'
     try:
         body = json.dumps(runtime_input)
 
-        response = bedrock_runtime.invoke_model(body=body, modelId=model_id, accept=accept, contentType=contentType)
+        response = bedrock_runtime.invoke_model(body=body, modelId=model_id, accept=accept, contentType=content_type)
 
-        response_body = json.loads(response.get('body').read())
+        response_body = json.loads(pydash.get(response, 'body').read())
         return response_body, get_token_consumption(response_body)
     except Exception as e:
         print(e)
@@ -144,7 +148,8 @@ def invoke_mixtral_8x7b_runtime(input, model_id):
 
 
 def invoke_claude_3_sonnet_runtime(input, model_id):
-    content = [{"type": "text", "text": input["prompt"]}]
+    prompt = input["prompt"]
+    content = [{"type": "text", "text": prompt}]
     print(input["image"])
 
     if input["image"] is not None:

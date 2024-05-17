@@ -11,6 +11,7 @@ import streamlit_analytics2 as streamlit_analytics
 
 from model_configurations import fm_models
 from process_pdf_to_text import is_file_a_pdf, extract_text_from_pdf
+from prompt_generator import generate_better_prompt_via_meta_prompting
 from prompts import *
 
 bedrock_client = boto3.client('bedrock')
@@ -84,7 +85,11 @@ def main():
     components.html(html_code, height=10)
 
     st.title(f'Prompt')
-    prompt = st.text_area("Prompt", custom_prompt, label_visibility="hidden")
+    prompt = st.text_area("Prompt", custom_prompt, label_visibility="hidden", key='prompt_text_area')
+    is_generate_prompt_selected = st.checkbox("Do you want me to submit an alternative prompt for you?")
+    if is_generate_prompt_selected:
+        prompt = generate_better_prompt_via_meta_prompting(prompt)
+        # st.caption(prompt)
 
     analytics_password = st.secrets["ANALYTICS"]["DASHBOARD_PASSWORD"]
     streamlit_analytics.start_tracking()
@@ -111,7 +116,8 @@ def main():
     st.divider()
 
     fm_model_names = pydash.map_(fm_models, "model_name")
-    default_models = ["jurassic_ultra", "cohere_command", "claude_3_sonnet"]
+    # default_models = ["jurassic_ultra", "cohere_command", "claude_3_sonnet"]
+    default_models = ["claude_3_sonnet"]
 
     selected_fm_model_names = st.multiselect(
         'Select models',
