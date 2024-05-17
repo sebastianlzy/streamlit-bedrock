@@ -2,7 +2,6 @@ import boto3
 import json
 from pydash import get
 
-bedrock = boto3.client('bedrock')
 bedrock_runtime = boto3.client(service_name='bedrock-runtime')
 top_p = 1
 temperature = 0
@@ -127,7 +126,7 @@ def invoke_llama_3_70b_runtime(input, model_id):
         <|eot_id|>
         <|start_header_id|>assistant<|end_header_id|>
     """
-    
+
     input_for_model_runtime = {
         "prompt": prompt,
         "temperature": temperature,
@@ -146,6 +145,8 @@ def invoke_mixtral_8x7b_runtime(input, model_id):
 
 def invoke_claude_3_sonnet_runtime(input, model_id):
     content = [{"type": "text", "text": input["prompt"]}]
+    print(input["image"])
+
     if input["image"] is not None:
         content.append({
             "type": "image",

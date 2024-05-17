@@ -1,20 +1,19 @@
 import base64
-
-import multiprocess as mp
-import os
+import time
 
 import boto3
-import pydash
-
-import time
-from prompts import *
+import multiprocess as mp
 import pandas as pd
+import pydash
 import streamlit as st
 import streamlit.components.v1 as components
 import streamlit_analytics2 as streamlit_analytics
-from model_configurations import fm_models
 
-bedrock = boto3.client('bedrock')
+from model_configurations import fm_models
+from process_pdf_to_text import is_file_a_pdf, extract_text_from_pdf
+from prompts import *
+
+bedrock_client = boto3.client('bedrock')
 bedrock_runtime = boto3.client(service_name='bedrock-runtime')
 top_p = 1
 temperature = 0
@@ -22,7 +21,7 @@ top_k = 500
 
 
 def list_foundational_models():
-    response = bedrock.list_foundation_models()
+    response = bedrock_client.list_foundation_models()
     models = response['modelSummaries']
     table = []
 
@@ -89,13 +88,21 @@ def main():
 
     st.title(f'Prompt')
     prompt = st.text_area("Prompt", custom_prompt, label_visibility="hidden")
-    uploaded_file = st.file_uploader("Choose a file (only works with Claude Sonnet)")
+    uploaded_file = st.file_uploader(
+        "This feature utilises Textract for PDF. For images, it only works with Claude Sonnet)")
     encoded_image = None
 
     if uploaded_file is not None:
         # To read file as bytes:
         bytes_data = uploaded_file.getvalue()
+        file_name = uploaded_file.name
         encoded_image = base64.b64encode(bytes_data).decode('utf-8')
+
+        if is_file_a_pdf(file_name):
+            text = extract_text_from_pdf(bytes_data, file_name)
+            prompt = f'### PDF Text ### \n {text} \n ### Instruction ### {prompt}'
+            encoded_image = None
+            print(prompt)
 
     st.divider()
 
@@ -130,7 +137,7 @@ def main():
 
 
 if __name__ == "__main__":
-    analytics_password = st.secrets["analytics"]["password"]
+    analytics_password = st.secrets["ANALYTICS"]["DASHBOARD_PASSWORD"]
     with streamlit_analytics.track(
             unsafe_password=analytics_password,
             streamlit_secrets_firestore_key="firebase",
