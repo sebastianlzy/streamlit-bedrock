@@ -89,7 +89,8 @@ def main():
     is_generate_prompt_selected = st.checkbox("Do you want me to submit an alternative prompt for you?")
     if is_generate_prompt_selected:
         prompt = generate_better_prompt_via_meta_prompting(prompt)
-        # st.caption(prompt)
+        with st.expander("Generated alternative prompt"):
+            st.caption(prompt)
 
     analytics_password = st.secrets["ANALYTICS"]["DASHBOARD_PASSWORD"]
     streamlit_analytics.start_tracking()
