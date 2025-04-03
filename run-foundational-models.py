@@ -117,7 +117,7 @@ def main():
     st.divider()
 
     fm_model_names = pydash.map_(fm_models, "model_name")
-    default_models = ["jurassic_ultra", "cohere_command", "claude_3_sonnet"]
+    default_models = ["jurassic_jamba_1_5_large", "claude_3_5_sonnet_v2", "cohere_command"]
 
     selected_fm_model_names = st.multiselect(
         'Select models',

@@ -28,22 +28,43 @@ def invoke_runtime_model(model_id, runtime_input,
         return {}
 
 
-def invoke_jurrasic_ultra_runtime(input, model_id):
+def invoke_deepseek_r1_runtime(input, model_id):
     input_for_model_runtime = {
-        'prompt': input["prompt"],
-        'maxTokens': 1024,
-        'temperature': temperature,
-        'topP': top_p,
-        'stopSequences': [],
-        'countPenalty': {'scale': 0},
-        'presencePenalty': {'scale': 0},
-        'frequencyPenalty': {'scale': 0}
+        "prompt": input["prompt"],
+        "temperature": temperature,
+        "top_p": top_p,
+        "max_tokens": 1024,
+        "stop": []
+    }
+
+    def get_token_consumption(response_body):
+        print(response_body)
+        return {
+            "input_tokens": len(input["prompt"]),
+            "output_tokens": len(get(response_body, 'choices.0.text')),
+        }
+
+    return invoke_runtime_model(model_id, input_for_model_runtime, get_token_consumption)
+
+
+def invoke_jurassic_jamba_runtime(input, model_id):
+    input_for_model_runtime = {
+        'messages': [
+            {
+                "role": "system",
+                "content": "You are a helpful professional. You are kind and you respond with helpful content in a professional manner."
+            },
+            {
+                "role": "user",
+                "content": input["prompt"]
+            }
+        ],
     }
 
     def get_token_consumption(response_body):
         return {
-            "input_tokens": len(get(response_body, 'prompt.tokens')),
-            "output_tokens": len(get(response_body, 'completions.0.data.tokens')),
+            "input_tokens": get(response_body, 'usage.prompt_tokens'),
+            "output_tokens": get(response_body, 'usage.completion_tokens'),
         }
 
     return invoke_runtime_model(model_id, input_for_model_runtime, get_token_consumption)

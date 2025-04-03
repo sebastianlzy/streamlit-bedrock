@@ -1,18 +1,38 @@
-from model_runtimes import invoke_jurrasic_ultra_runtime, invoke_claude_2_runtime, invoke_cohere_command_runtime, \
-    invoke_llama_2_13b_runtime, invoke_llama_2_70b_runtime, invoke_llama_3_70b_runtime, invoke_titan_text_g1_runtime, invoke_mixtral_8x7b_runtime, \
-    invoke_claude_3_sonnet_runtime, invoke_claude_3_haiku_runtime
-
 from pydash import get, map_
+
+from model_runtimes import invoke_claude_2_runtime, invoke_cohere_command_runtime, \
+    invoke_llama_2_13b_runtime, invoke_llama_2_70b_runtime, invoke_llama_3_70b_runtime, invoke_titan_text_g1_runtime, \
+    invoke_mixtral_8x7b_runtime, \
+    invoke_claude_3_sonnet_runtime, invoke_claude_3_haiku_runtime, invoke_jurassic_jamba_runtime, \
+    invoke_deepseek_r1_runtime
 
 fm_models = [
     {
-        "model_name": "jurassic_ultra",
-        "model_id": "ai21.j2-ultra",
+        "model_name": 'deepseek_r1',
+        "model_id": "us.deepseek.r1-v1:0",
         "isEnabled": True,
-        "output_formatter": lambda _response: get(_response, 'completions.0.data.text'),
-        "invoke_model_runtime": lambda input, _model_id: invoke_jurrasic_ultra_runtime(input, _model_id),
-        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.0188 / 1000 + _tokens.get(
-            "output_tokens") * 0.0188 / 1000,
+        "output_formatter": lambda _response: get(_response, 'choices.0.text'),
+        "invoke_model_runtime": lambda input, _model_id: invoke_deepseek_r1_runtime(input, _model_id),
+        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.00135 / 1000 + _tokens.get(
+            "output_tokens") * 0.0054 / 1000,
+    },
+    {
+        "model_name": "jurassic_jamba_1_5_large",
+        "model_id": "ai21.jamba-1-5-large-v1:0",
+        "isEnabled": True,
+        "output_formatter": lambda _response: get(_response, 'choices.0.message.content'),
+        "invoke_model_runtime": lambda input, _model_id: invoke_jurassic_jamba_runtime(input, _model_id),
+        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.002 / 1000 + _tokens.get(
+            "output_tokens") * 0.008 / 1000,
+    },
+    {
+        "model_name": "claude_3_5_sonnet_v2",
+        "model_id": "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+        "isEnabled": True,
+        "output_formatter": lambda _response: get(_response, 'content.0.text'),
+        "invoke_model_runtime": lambda input, _model_id: invoke_claude_3_sonnet_runtime(input, _model_id),
+        "calculate_cost": lambda _tokens: _tokens.get("input_tokens") * 0.00800 / 1000 + _tokens.get(
+            "output_tokens") * 0.02400 / 1000,
     },
     {
         "model_name": "claude_2",

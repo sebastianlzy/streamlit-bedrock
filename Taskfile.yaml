@@ -1,9 +1,13 @@
 version: '3'
 
+dotenv: ['.env', '{{.ENV}}/.env', '{{.HOME}}/.env']
 tasks:
   activate-pyenv:
     cmds:
       - pyenv activate streamlit-bedrock
+  pip-freeze:
+    cmds:
+      - pip3 freeze > requirements.txt
   run-streamlit:
     cmds:
       - streamlit run run-foundational-models.py
